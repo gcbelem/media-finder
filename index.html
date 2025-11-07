@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trio</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <header>
+        <h1 class="go-home">trio</h1>
+        <nav>
+            <span class="material-symbols-outlined">menu</span>
+            <div id="navlinks"
+                <ul>
+                    <li class="go-home">Home</li>
+                    <li class="go-explore">Explore</li>
+                    <li class="go-collection">Collection</li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+    
+    <main>
+
+        <section id="home-screen">
+            <h2 id="hero-heading">Ideas in motion.</h2>
+            <p>Movies. Podcasts. Books.</p>
+            <div id="start-buttons">
+                <button class="hero-button go-explore" >Explore</button>
+                <button class="hero-button go-collection">Collection</button>
+            </div>
+        </section>
+        
+        <section id="explore-screen">
+           <h2>Explore</h2>
+            <div id="search-bar">
+                <input type="text" id="search-input" placeholder="search">
+                <button id="find-button">
+                    <span class="material-symbols-outlined">search</span>
+                    Find
+                </button>
+                <button>
+                    <span class="material-symbols-outlined">lightbulb_2</span>
+                    Random
+                </button>
+            </div>
+            
+            <div id="media-area">
+            </div>
+        </section>
+
+        <section id="collection-screen">
+            <h2>Your Collections</h2>
+            <div id= "empty-collection" class="collection-container">
+                <span class="material-symbols-outlined">folder_off</span>
+                <p>No items yet.<p>
+            </div>
+        </section>
+        
+    </main>
+    <script type="module" src="home-script.js"></script>
+    <script type="module" src="directory.js"></script>
+    <script type="module" src="explore-ui.js"></script>
+    <script type="module" src="api.js"></script>
+    <script type="module" src="main.js"></script>
+    <script type="module" src="collection.js"></script>
+
+</body>
+</html>

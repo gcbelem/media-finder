@@ -1,0 +1,48 @@
+main {
+    padding: 20px;
+}
+
+section {
+    padding: 10px;
+}
+
+#bookmarked-list {
+    border: 1px dashed green;
+}
+
+.bookmarked-container {
+    margin: auto;
+    width: 300px;
+    min-height: 450px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 25px;
+}
+
+.bookmarked-item {
+    display: flex;
+    flex-flow: column;
+}
+
+.bookmarked-basic {
+    display: grid;
+    grid-template-rows: 3 (25%,25%,50%);
+    width: 100%;
+}
+
+.more-info {
+    display: flex;
+    align-self: right;
+}
+
+h3 {
+    grid-column: span 3;
+}
+
+h4 {
+    display: inline;
+}
+
+.bookmarked-extra {
+    grid-column: span 3;
+}
