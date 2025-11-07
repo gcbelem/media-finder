@@ -30,14 +30,15 @@ FETCH MEDIA LIST
 
 */
 
+// Demo API keys for development and testing purposes.
+
+const tmdbKey = "bedd5be9d96ca9abea707c3af61dd52b";
+
+const googleBooksKey = "AIzaSyAKwOW5az8D5Iy8w5T0JkzCXA1qSZWYZEA";
+// Protected by referrer restrictions.
+
 async function fetchList(type) {
   
-  // Demo API keys for development and testing purposes.
-
-  const tmdbKey = "bedd5be9d96ca9abea707c3af61dd52b";
-
-  const googleBooksKey = "AIzaSyAKwOW5az8D5Iy8w5T0JkzCXA1qSZWYZEA";
-  // Protected by referrer restrictions.
   
   try {
     
@@ -105,9 +106,7 @@ async function fetchSelection(type) {
       switch (type) {
         case "movie":
           fetchData = await fetch(
-            `https://api.themoviedb.org/3/movie/${mediaRegister.selectedId}`, 
-            options
-          );
+            `https://api.themoviedb.org/3/movie/${mediaRegister.selectedId}?api_key=${tmdbKey}`);
           break
         case "podcast":
           fetchData = null;
@@ -127,16 +126,6 @@ async function fetchSelection(type) {
     console.error('Error fetching data:', error);
   };
 }
-
-/* API COMPLEMENT - OPTIONS */
-
-const options = {
-  method: 'GET',
-  headers: {
-    accept: 'application/json',
-    Authorization: `Bearer ${tmdbKey}`
-  }
-};
 
 /*
 
