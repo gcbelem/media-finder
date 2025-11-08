@@ -83,9 +83,8 @@ CHECKING
 
 */
 
-function checkDuplicate (type) {
+async function checkDuplicate (type) {
 
-  const mediaRegister = register[type];
   let id = register[type].selectedId;
   let attemptCount = 0;
   const maxAttempts = 50;
@@ -93,15 +92,14 @@ function checkDuplicate (type) {
   const store = JSON.parse(localStorage.getItem("alreadySeen") || "[]");
 
   while (store.includes(id) && attemptCount < maxAttempts) {
-    mediaRegister.counter++;
-    checkCounter(type);
+    await checkCounter(type);
     id = register[type].selectedId;
     attemptCount++;
   };
   
   if (attemptCount >= maxAttempts) {
     state[type].hasError = true;
-    return checkError(type);
+    return true;
   };
   return false;
 };
@@ -110,23 +108,12 @@ function checkCounter(type) {
   const mediaRegister = register[type];
   const mediaState = state[type];
 
-  if (mediaRegister.counter === mediaRegister.list.length) {
-    mediaRegister.counter = 0;
+  mediaRegister.counter++;
+
+  if (mediaRegister.counter >= mediaRegister.list.length) {
     mediaState.mustFetchNextList = true;
-    
-    switch (type) {
-      case "movie":
-        return mediaRegister.page++;
-      case "podcast":
-        return null;
-      case "book":
-        return mediaRegister.startIndex += 10
     };
-
-    fetchList(type);
-
-  };
-}
+};
 
 function checkKeyword (type) {
   const mediaRegister = register[type];
@@ -135,6 +122,7 @@ function checkKeyword (type) {
 
   if (inputValue !== register.keyword) {
     register.keyword = inputValue;
+    mediaRegister.list = [];
     mediaRegister.counter = 0;
     mediaState.hasError = false;
     mediaState.mustFetchNextList = true;
@@ -161,63 +149,84 @@ LOAD MEDIA
 
 async function loadMedia(type) {
 
+  const mediaRegister = register[type];
   const mediaState = state[type];
 
   checkKeyword(type);
+  
+  if (await checkDuplicate(type) === true) {
+    return mediaState.hasError = true;
+  };
 
   if (mediaState.mustFetchNextList === true) {
+    mediaRegister.counter = 0;
+
+    switch (type) {
+      case "movie":
+        mediaRegister.page++;
+        break
+      case "podcast":
+        null;
+        break
+      case "book":
+        mediaRegister.startIndex += 10
+        break
+    };
     await fetchList(type);
     mediaState.mustFetchNextList = false;
   }
 
-  if (checkDuplicate(type) === true) {
-    return mediaState.hasError = true;
-  };
-
   await fetchSelection(type);
   updateCard(type);
+
 }
 
 function checkError(type) {
   const mediaState = state[type];
   const mediaCard = document.querySelector(`#${type}-card`);
+  const container = document.querySelector(`#${type}-container`);
+  const existingError = document.querySelector(`#error-${type}`);
 
   if (mediaState.hasError === true) {
     mediaCard.classList.add("hidden");
-    
-    const errorCard = buildElement ({
-      type: "div",
-      id: `error-${type}`,
-      className: "error-card",
-      parent: document.querySelector(`#${type}-container`)
-    });
 
-    buildElement({
-      type: "span",
-      className: "material-symbols-outlined",
-      text: "error",
-      parent: errorCard
-    });
-
-    buildElement({
-      type: "p",
-      text: `No ${type}s to display.`,
-      parent: errorCard
-    });
+    if (!existingError) {
+      const errorCard = buildElement({
+        type: "div",
+        id: `error-${type}`,
+        className: "error-card",
+        parent: container
+      });
 
       buildElement({
-      type: "p",
-      text: `Try a different search.`,
-      parent: errorCard
-    });
-  } else {
-      if (document.querySelector(`#error-${type}`)) {
-        document.querySelector(`#error-${type}`).remove();
-        mediaCard.classList.remove("hidden");
-      };
-  };  
-}
+        type: "span",
+        className: "material-symbols-outlined",
+        text: "error",
+        parent: errorCard
+      });
 
+      buildElement({
+        type: "p",
+        text: `No ${type}s to display.`,
+        parent: errorCard
+      });
+
+      buildElement({
+        type: "p",
+        text: `Try a different search.`,
+        parent: errorCard
+      });
+    };
+
+  } else {
+    const errorCard = document.querySelector(`#error-${type}`);
+    if (errorCard) {
+      errorCard.remove();
+    }
+    mediaCard.classList.remove("hidden");
+  }
+}
+  
 /* SEARCH BAR */
 
 const findButton = document.querySelector("#find-button");
@@ -230,10 +239,10 @@ findButton.addEventListener("click", () => {
     window.alert("No keyword")
   } else {
     mediaType.forEach(type => {
+      state[type].mustFetchNextList = true;
       const container = document.querySelector(`#${type}-container`);
       container.classList.remove("hidden");
       loadMedia(type);
-      checkError(type);
     });
   };
 })

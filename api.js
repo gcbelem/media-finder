@@ -145,7 +145,10 @@ function updateCard(type) {
       overview: `#${type}-overview`
   };
 
-  if (mediaState.hasError === false) {
+  if (mediaState.hasError === true) {
+    return checkError(type);
+  } else {
+    checkError(type);
     Object.entries(domPath).forEach(([apiItem, path]) => {
       const updateElement = document.querySelector(path);
   
@@ -171,10 +174,8 @@ function updateCard(type) {
           break
       };
     });
-  } else {
-    checkError(type);
   };
-}
+};
 
 export {
   fetchList,
