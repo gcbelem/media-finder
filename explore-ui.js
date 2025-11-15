@@ -11,7 +11,8 @@ import {
   bookmarkMedia,  
   discardMedia,  
   exploreMedia,  
-  loadMedia} 
+  loadMedia,
+  throttleQuery} 
 from "./main.js";
 
 /*
@@ -157,9 +158,9 @@ const buttonAction = [
   ];
 
 const assignedFunctions = {
-  "bookmark": bookmarkMedia,
-  "discard": discardMedia,
-  "shuffle": loadMedia,
+  "bookmark": throttleQuery(bookmarkMedia),
+  "discard": throttleQuery(discardMedia),
+  "shuffle": throttleQuery(loadMedia),
   "explore": exploreMedia
 }
 

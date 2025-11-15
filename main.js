@@ -1,6 +1,7 @@
 import { 
   fetchList, 
   fetchSelection, 
+  fetchKeyword,
   updateCard} 
 from "./api.js";
 
@@ -14,7 +15,11 @@ import {
   updateBookmark
 }
 from "./collection.js"
-import { buildElement } from "./home-script.js";
+
+import { 
+  buildElement 
+} 
+from "./home-script.js";
 
 /*
 
@@ -83,7 +88,30 @@ CHECKING
 
 */
 
-async function checkDuplicate (type) {
+async function resetMedia() {
+  mediaType.forEach(type => {
+    const mediaRegister = register[type];
+    const mediaState = state[type];
+   
+    mediaRegister.list = [];
+    mediaRegister.counter = 0;
+    mediaState.hasError = false;
+  
+    switch (type) {
+      case "movie":
+        mediaRegister.page = 1;
+        break
+      case "podcast":
+        //;
+        break
+      case "book":
+        mediaRegister.startIndex = 0;
+        break
+    };
+  });
+}
+
+async function checkDuplicate(type) {
 
   let id = register[type].selectedId;
   let attemptCount = 0;
@@ -115,32 +143,6 @@ function checkCounter(type) {
     };
 };
 
-function checkKeyword (type) {
-  const mediaRegister = register[type];
-  const mediaState = state[type];
-  const inputValue = document.querySelector("input").value
-
-  if (inputValue !== register.keyword) {
-    register.keyword = inputValue;
-    mediaRegister.list = [];
-    mediaRegister.counter = 0;
-    mediaState.hasError = false;
-    mediaState.mustFetchNextList = true;
-
-    switch (type) {
-      case "movie":
-        mediaRegister.page = 1;
-        break
-      case "podcast":
-        //;
-        break
-      case "book":
-        mediaRegister.startIndex = 0;
-        break
-    };
-  };
-}
-
 /*
 
 LOAD MEDIA
@@ -151,8 +153,6 @@ async function loadMedia(type) {
 
   const mediaRegister = register[type];
   const mediaState = state[type];
-
-  checkKeyword(type);
   
   if (await checkDuplicate(type) === true) {
     return mediaState.hasError = true;
@@ -229,27 +229,68 @@ function checkError(type) {
   
 /* SEARCH BAR */
 
+async function startExplorer () {
+  for (const type of mediaType) {
+    const container = document.querySelector(`#${type}-container`);
+    container.classList.remove("hidden");
+    await fetchList(type);
+    loadMedia(type)
+  };
+}
+
+
 const findButton = document.querySelector("#find-button");
 
 findButton.addEventListener("click", () => {
 
-  let findInput = document.querySelector("input").value;
+  const userInput = document.querySelector("input").value;
 
-  if (!findInput) {
-    window.alert("No keyword")
-  } else {
-    mediaType.forEach(type => {
-      state[type].mustFetchNextList = true;
-      const container = document.querySelector(`#${type}-container`);
-      container.classList.remove("hidden");
-      loadMedia(type);
-    });
+  if (!userInput) {
+    return window.alert ("No keyword!")
   };
+
+  const currentInput = register.keyword;
+  
+  if (userInput !== currentInput) {
+    resetMedia();
+    register.keyword = userInput;
+  };
+
+  startExplorer();
+});
+
+const randomButton = document.querySelector("#random-input")
+
+randomButton.addEventListener("click",() => {
+  fetchKeyword();
 })
 
+/* THROTTLING */
+
+function throttleQuery (action) {
+  let cooldown = null;
+  const delay = 750;
+
+  return (...args) => {
+    if (!cooldown) {
+      action (...args);
+      cooldown = setTimeout(() => {
+        cooldown = null
+      }, delay);
+    };
+  };
+}
+
+/* DEBOUNCING */
+
+// TO BE ADDED
+
 export {
+  resetMedia,
   bookmarkMedia,
   discardMedia,
   loadMedia,
   exploreMedia,
+  throttleQuery,
+  startExplorer,
   checkError}

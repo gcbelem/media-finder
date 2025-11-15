@@ -1,4 +1,4 @@
-const mediaType = ["movie","book"]
+const mediaType = ["movie", "podcast","book"]
 
 /* 
 MEDIA DIRECTORY 
@@ -8,13 +8,7 @@ let state = {};
 
 function setMedia() {
     
-    Object.defineProperties(register, {
-        keyword: {
-            value: "",
-            writable: true,
-            enumerable: true,
-        }
-    });
+    register.keyword = "";
 
     const storedInfo = [
         "bookmark",
@@ -83,7 +77,9 @@ function defineMediaGetters(type) {
             `https://image.tmdb.org/t/p/w500/${media.poster_path}` ||
             null,
 
-          time: media.runtime || media.volumeInfo?.pageCount || null,
+          time: media.runtime || 
+          media.volumeInfo?.pageCount || 
+          null,
 
           label:
             media.genres?.[0]?.name ||
@@ -141,7 +137,7 @@ function defineMediaGetters(type) {
   });
 }
 
-function setMediaSpecifics(register, type) {
+function setMediaSpecifics(type) {
     const mediaPath = register[type];
 
     if (type == "movie") {

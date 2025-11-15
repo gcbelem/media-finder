@@ -1,10 +1,13 @@
 import {
+  mediaType,
   register,
   state} 
 from "./directory.js";
 
 import {
-  checkError
+  checkError,
+  resetMedia,
+  startExplorer
 }
 from "./main.js"
 
@@ -21,8 +24,41 @@ async function handleJSON(type,data) {
   };
   
   mediaState.hasError = false;
-  return parse
+  return parse;
 }
+
+/*
+
+RANDOM KEYWORD 
+
+*/
+
+async function fetchKeyword() {
+  try {
+
+    const getKeyword = await fetch("https://random-word-api.vercel.app/api?words=1");
+    if (!getKeyword.ok) {
+      mediaType.forEach(type => {
+        const mediaState = state[type];
+        mediaState.hasError = true;
+        return updateCard(type);
+      });
+    }
+
+    const parsedKeyword = await getKeyword.json();
+    const randomKeyword = parsedKeyword[0];
+
+    resetMedia();
+    register.keyword = randomKeyword;
+    startExplorer();
+  }
+
+  catch (error) {
+    console.error('Error fetching data:', error);
+  };
+}
+
+window.fetchKeyword = fetchKeyword
 
 /* 
 
@@ -38,7 +74,6 @@ const googleBooksKey = "AIzaSyAKwOW5az8D5Iy8w5T0JkzCXA1qSZWYZEA";
 // Protected by referrer restrictions.
 
 async function fetchList(type) {
-  
   
   try {
     
@@ -164,8 +199,11 @@ function updateCard(type) {
           updateElement.setAttribute("src", safeImage);
           break
         case "time":
-          updateElement.textContent = mediaRegister.selectedTime;
-          break
+          if (type === "book") {
+            return updateElement.textContent = `${mediaRegister.selectedTime} pages`;
+          } else {
+              return updateElement.textContent = `${mediaRegister.selectedTime} minutes`;
+          };
         case "label":
           updateElement.textContent = mediaRegister.selectedLabel;
           break
@@ -177,8 +215,11 @@ function updateCard(type) {
   };
 };
 
+window.fetchList = fetchList
+
 export {
   fetchList,
   fetchSelection,
+  fetchKeyword,
   updateCard
 }
