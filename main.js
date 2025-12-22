@@ -1,6 +1,7 @@
 import { 
   fetchList, 
-  fetchSelection, 
+  fetchSelection,
+  fetchAutocomplete, 
   fetchKeyword,
   updateCard} 
 from "./api.js";
@@ -283,7 +284,29 @@ function throttleQuery (action) {
 
 /* DEBOUNCING */
 
-// TO BE ADDED
+function debounceQuery(action){
+  let time = null;
+  const delay = 750;
+  
+  return (...args) => {
+    clearTimeout(time);
+    time = setTimeout(() => {
+      action(...args)
+    }, delay);
+  }
+}
+
+const searchInput = document.querySelector("#search-input");
+const debounceAutocomplete = debounceQuery(fetchAutocomplete);
+
+searchInput.addEventListener("input", () => {
+  const autocompleteContainer = document.querySelector("#autocomplete-box");
+  if (autocompleteContainer)
+    autocompleteContainer.remove();
+
+  if (searchInput.value != null)
+   debounceAutocomplete();
+});
 
 export {
   resetMedia,

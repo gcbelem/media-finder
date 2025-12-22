@@ -10,10 +10,13 @@
 <body>
 
     <header>
-        <h1 class="go-home">trio</h1>
+        <div id="top-bar">
+            <h1 class="go-home">trio</h1>
+            <span class="material-symbols-outlined" id="dropdown-menu">menu</span>
+        </div>
+
         <nav>
-            <span class="material-symbols-outlined">menu</span>
-            <div id="navlinks"
+            <div id="navlinks" class="hidden">
                 <ul>
                     <li class="go-home">Home</li>
                     <li class="go-explore">Explore</li>
@@ -27,7 +30,7 @@
 
         <section id="home-screen">
             <h2 id="hero-heading">Ideas in motion.</h2>
-            <p>Movies. Podcasts. Books.</p>
+            <p id="hero-text">Movies. Podcasts. Books.</p>
             <div id="start-buttons">
                 <button class="hero-button go-explore" >Explore</button>
                 <button class="hero-button go-collection">Collection</button>

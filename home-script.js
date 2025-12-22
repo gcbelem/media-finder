@@ -43,7 +43,19 @@ setNavigation();
 
 /*
 
-CREATE ELEMENT
+DROPDOWN MENU
+
+*/
+
+const dropdownIcon = document.querySelector("#dropdown-menu");
+dropdownIcon.addEventListener("click", () => {
+  const navigationMenu = document.querySelector("#navlinks")
+  navigationMenu.classList.toggle("hidden");
+});
+
+/*
+
+BUILD ELEMENT
 
 */
 

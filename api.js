@@ -11,6 +11,10 @@ import {
 }
 from "./main.js"
 
+import { 
+  buildElement 
+} from "./home-script.js";
+
 async function handleJSON(type,data) {
   const mediaState = state[type];
   
@@ -25,6 +29,56 @@ async function handleJSON(type,data) {
   
   mediaState.hasError = false;
   return parse;
+}
+
+/*
+
+AUTOCOMPLETE
+
+*/
+
+async function fetchAutocomplete() {
+  try {
+    const searchText = document.querySelector("#search-input")
+    let typedText = searchText.value;
+
+    if (typedText.length === 0)
+      return
+
+    const getAutocompleteList = await fetch(`https://api.datamuse.com/words?sp=*${typedText}*`);
+    if (!getAutocompleteList.ok)
+      return
+
+    const autocompleteList = await getAutocompleteList.json();   
+
+    const autocompleteContainer = buildElement({
+    type: "div",
+    id: "autocomplete-box",
+    parent: document.querySelector("#search-bar")
+    })
+
+    const maxSuggestions = 4;
+    for (let i = 0; i < maxSuggestions && i < autocompleteList.length; i++) {
+      const addRecommendation = buildElement({
+        type: "span",
+        className: "autocomplete-text",
+        parent: autocompleteContainer
+      })
+      const word = autocompleteList[i].word
+
+      addRecommendation.textContent = word; 
+      addRecommendation.addEventListener("click", () => {
+        searchText.value = word;
+        const autocompleteContainer = document.querySelector("#autocomplete-box");
+      if (autocompleteContainer)
+       autocompleteContainer.remove();
+      })
+    };
+  }
+  
+  catch (error) {
+    console.error('Error fetching data:', error);
+  };
 }
 
 /*
@@ -50,6 +104,8 @@ async function fetchKeyword() {
 
     resetMedia();
     register.keyword = randomKeyword;
+    const searchText = document.querySelector("#search-input");
+    searchText.value = randomKeyword;
     startExplorer();
   }
 
@@ -57,8 +113,6 @@ async function fetchKeyword() {
     console.error('Error fetching data:', error);
   };
 }
-
-window.fetchKeyword = fetchKeyword
 
 /* 
 
@@ -221,5 +275,6 @@ export {
   fetchList,
   fetchSelection,
   fetchKeyword,
+  fetchAutocomplete,
   updateCard
 }
