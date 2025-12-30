@@ -32,7 +32,7 @@ function setMedia() {
         };
 
         defineMediaGetters(type);   
-        setMediaSpecifics(register, type);
+        setMediaSpecifics(type);
         
         state[type] = {
             hasError: false,
@@ -46,7 +46,7 @@ function setMedia() {
 function defineMediaGetters(type) {
     Object.defineProperties(register[type], {
     
-        selected: {
+      selected: {
       get() {
         return this.list?.[this.counter] || null;
       }
@@ -63,32 +63,46 @@ function defineMediaGetters(type) {
         const media = this.selectedData ?? {};
 
         return {
-          title: media.title || media.volumeInfo?.title || null,
+          title: media.title || 
+            media.volumeInfo?.title || 
+            media.name || 
+            null,
 
           year:
             media.release_date?.split("-")?.[0] ||
             media.volumeInfo?.publishedDate?.split("-")?.[0] ||
+            media.release_date?.split("-")?.[0] || 
             null,
 
           image:
             media.volumeInfo?.imageLinks?.medium ||
             media.volumeInfo?.imageLinks?.large ||
             media.volumeInfo?.imageLinks?.thumbnail ||
-            `https://image.tmdb.org/t/p/w500/${media.poster_path}` ||
+            (media.poster_path
+              ? `https://image.tmdb.org/t/p/w500/${media.poster_path}`
+              : null) ||
+            media.images?.[0]?.url ||
             null,
 
           time: media.runtime || 
-          media.volumeInfo?.pageCount || 
-          null,
+            media.volumeInfo?.pageCount ||
+            Math.round(media.duration_ms / 60000) ||
+            null,
 
           label:
             media.genres?.[0]?.name ||
             media.volumeInfo?.categories?.[0]?.split("/")?.[0] ||
+            media.type ||
             null,
 
-          overview: media.overview || media.volumeInfo?.description || null,
+          overview: media.overview || 
+            media.volumeInfo?.description || 
+            media.description ||
+            null,
 
-          link: media.volumeInfo?.infoLink || null
+          link: media.volumeInfo?.infoLink || 
+            media.external_urls?.spotify ||
+            null
         };
       }
     },
@@ -137,14 +151,16 @@ function defineMediaGetters(type) {
   });
 }
 
-function setMediaSpecifics(type) {
+function setMediaSpecifics (type) {
     const mediaPath = register[type];
 
     if (type == "movie") {
         const movieData = {
             page: {
             value: 1, 
-            writable: true
+              writable: true,
+              enumerable: true,
+              configurable: true
             } 
         };
         Object.defineProperties(mediaPath, movieData);
@@ -152,7 +168,12 @@ function setMediaSpecifics(type) {
 
         if (type == "podcast") {
         const podcastData = {
-            
+            offset: {
+              value: 0,
+              writable: true,
+              enumerable: true,
+              configurable: true
+            }
         };
         Object.defineProperties(mediaPath, podcastData);
     };
@@ -161,7 +182,9 @@ function setMediaSpecifics(type) {
         const bookData = {
             startIndex: {
             value: 0, 
-            writable: true
+              writable: true,
+              enumerable: true,
+              configurable: true
             }
         };
         Object.defineProperties(mediaPath, bookData);

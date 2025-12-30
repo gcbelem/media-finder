@@ -114,6 +114,144 @@ async function fetchKeyword() {
   };
 }
 
+/*
+
+SPOTIFY AUTHORIZATION 
+
+*/  
+
+async function handleSpotifyAuthorization() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  
+  const clientId = "e470d39d401c43719bbcddbef6ea1d01";
+
+  if (checkValidToken() === true) {
+    return;
+  }
+
+  if (localStorage.getItem("refresh_token")) {
+    await refreshToken(clientId);
+    return;
+  }
+
+  if (code) {
+    await getToken(code, clientId);
+    return;
+  }
+
+  await getAuthorization(clientId);
+};
+
+async function getAuthorization(clientId) {
+  const codeVerifier = generateRandomString(64);
+  const hashed = await encodeString(codeVerifier);
+  const codeChallenge = base64Encode(hashed);
+
+  localStorage.setItem("code_verifier", codeVerifier);
+
+  const authUrl = new URL("https://accounts.spotify.com/authorize");
+  authUrl.search = new URLSearchParams({
+    response_type: "code",
+    client_id: clientId,
+    redirect_uri: "http://127.0.0.1:5500/index.html",
+    scope: "user-read-private user-read-email user-read-playback-position",
+    code_challenge_method: "S256",
+    code_challenge: codeChallenge,
+  });
+
+  window.location.href = authUrl.toString();
+}
+  
+function generateRandomString(length) {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+};
+
+async function encodeString(plain) {
+  const encoder = new TextEncoder();
+  return crypto.subtle.digest("SHA-256", encoder.encode(plain));
+};
+
+function base64Encode(input) {
+  return btoa(String.fromCharCode(...new Uint8Array(input)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+};
+  
+function checkValidToken() {
+  const token = localStorage.getItem("access_token");
+  const expiresAt = localStorage.getItem("expires_at");
+
+  if (!token || !expiresAt) {
+    return false;
+  }
+
+  return Date.now() < Number(expiresAt);
+}
+
+async function getToken(code, clientId) {
+  const codeVerifier = localStorage.getItem('code_verifier');
+
+  const url = "https://accounts.spotify.com/api/token";
+  const redirectUri = 'http://127.0.0.1:5500/index.html';
+
+  const payload = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      client_id: clientId,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+      code_verifier: codeVerifier,
+    }),
+  }
+
+  const body = await fetch(url, payload);
+  const response = await body.json();
+
+  localStorage.setItem("access_token", response.access_token);
+  localStorage.setItem("refresh_token", response.refresh_token);
+  localStorage.setItem(
+    "expires_at",
+    Date.now() + response.expires_in * 1000
+  );
+};
+
+async function refreshToken(clientId) {
+  const refreshToken = localStorage.getItem('refresh_token');
+  const url = "https://accounts.spotify.com/api/token";
+
+    const payload = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: new URLSearchParams({
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+        client_id: clientId
+      }),
+    }
+    const body = await fetch(url, payload);
+    const response = await body.json();
+
+    localStorage.setItem("access_token", response.access_token);
+    localStorage.setItem(
+      "expires_at",
+      Date.now() + response.expires_in * 1000
+    );
+
+    if (response.refresh_token) {
+      localStorage.setItem('refresh_token', response.refresh_token);
+    };
+}
+
 /* 
 
 FETCH MEDIA LIST
@@ -132,8 +270,11 @@ async function fetchList(type) {
   try {
     
     const mediaRegister = register[type];
-    const keyword = register.keyword;
     const mediaState = state[type];
+
+    
+    const keyword = register.keyword;
+    const encondedKeyword = encodeURIComponent(keyword);
 
     let apiResponse = null;
 
@@ -153,6 +294,18 @@ async function fetchList(type) {
       );
 
     } else if (type == "podcast") {
+      const token = localStorage.getItem("access_token");
+
+      if (!token || !checkValidToken()) {
+        await handleSpotifyAuthorization();
+        return; 
+      }
+
+        apiResponse = await fetch(`https://api.spotify.com/v1/search?q=${encondedKeyword}&type=episode&market=US&limit=20&offset=${mediaRegister.offset}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+    });
 
     } else if (type == "book") {
       apiResponse = await fetch(
@@ -164,7 +317,20 @@ async function fetchList(type) {
     if (!mediaList) {
         return mediaState.hasError = true;
     }
-    const parseMediaList = mediaList.results || mediaList.items;
+    
+    let parseMediaList = null;
+
+    switch (type) {
+      case "movie":
+        parseMediaList = mediaList.results || [];
+        break
+      case "podcast":
+        parseMediaList = mediaList.episodes?.items || [];
+        break
+      case "book":
+        parseMediaList = mediaList.items || [];
+        break
+    }
 
     if (!parseMediaList || parseMediaList.length === 0) {
       mediaState.hasError = true;
@@ -192,22 +358,26 @@ async function fetchSelection(type) {
     const mediaState = state[type];
 
     if (mediaState.hasError === false) {
-      switch (type) {
-        case "movie":
-          fetchData = await fetch(
+      if (type === "movie" || type === "book") {
+        switch (type) {
+          case "movie":
+            fetchData = await fetch(
             `https://api.themoviedb.org/3/movie/${mediaRegister.selectedId}?api_key=${tmdbKey}`);
-          break
-        case "podcast":
-          fetchData = null;
-          break
-        case "book":
-          fetchData = await fetch(
+            break
+          case "book":
+            fetchData = await fetch(
             `https://www.googleapis.com/books/v1/volumes/${mediaRegister.selectedId}?key=${googleBooksKey}`
-          );
-          break
-      };
-      const selectedMedia = await handleJSON (type, fetchData);
-      return mediaRegister.selectedData = selectedMedia;
+            );
+            break
+        }
+
+        const selectedMedia = await handleJSON (type, fetchData);
+        return mediaRegister.selectedData = selectedMedia;
+
+      } else if (type === "podcast") {
+          return mediaRegister.selectedData =
+          mediaRegister.list?.[mediaRegister.counter]
+      }
     };
   }
 
@@ -268,8 +438,6 @@ function updateCard(type) {
     });
   };
 };
-
-window.fetchList = fetchList
 
 export {
   fetchList,
