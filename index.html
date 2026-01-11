@@ -11,43 +11,51 @@
 
     <header>
         <div id="top-bar">
-            <h1 class="go-home">trio</h1>
-            <span class="material-symbols-outlined" id="dropdown-menu">menu</span>
+            <h1 class="js-go-home">trio</h1>
+            <button id="menu-toggle"><span class="material-symbols-outlined">menu</span></button>
         </div>
 
-        <nav>
-            <div id="navlinks" class="hidden">
-                <ul>
-                    <li class="go-home">Home</li>
-                    <li class="go-explore">Explore</li>
-                    <li class="go-collection">Collection</li>
-                </ul>
-            </div>
+        <nav class="is-hidden">
+            <ul>
+                <li>
+                    <a href="#" class="js-go-home">Home</a>
+                </li>
+                <li>
+                    <a href="#" class="js-go-explore">Explore</a>
+                </li>
+                <li>
+                    <a href="#" class="js-go-collection">Collections</a>
+                </li>
+            </ul>
         </nav>
     </header>
     
     <main>
 
-        <section id="home-screen">
+        <section id="home">
             <h2 id="hero-heading">Ideas in motion.</h2>
-            <p id="hero-text">Movies. Podcasts. Books.</p>
-            <div id="start-buttons">
-                <button class="hero-button go-explore" >Explore</button>
-                <button class="hero-button go-collection">Collection</button>
+                <p id="hero-text">Movies, podcasts, and books, tailored to what you like.</p>
+            <div id="hero-actions">
+                <button id="hero-button-explore" class="js-go-explore hero-button" >
+                    Explore
+            </button>
+                <button id="hero-button-collection" class="js-go-collection hero-button">
+                    Collection
+                </button>
             </div>
         </section>
         
-        <section id="explore-screen">
+        <section id="explore">
            <h2>Explore</h2>
             <div id="search-bar">
-                <input type="text" id="search-input" placeholder="search">
-                <button id="find-button">
+                <input type="text" id="search-input" placeholder="Search movies, podcasts, and books.">
+                <button id="search-submit">
                     <span class="material-symbols-outlined">search</span>
-                    Find
+                    Search
                 </button>
-                <button id="random-input"> 
+                <button id="search-random"> 
                     <span class="material-symbols-outlined">lightbulb_2</span>
-                    Random
+                    Surprise Me
                 </button>
             </div>
             
@@ -55,11 +63,11 @@
             </div>
         </section>
 
-        <section id="collection-screen">
+        <section id="collection">
             <h2>Your Collections</h2>
-            <div id= "empty-collection" class="collection-container">
+            <div id= "collection-empty-state">
                 <span class="material-symbols-outlined">folder_off</span>
-                <p>No items yet.<p>
+                <p>No items yet.</p>
             </div>
         </section>
         

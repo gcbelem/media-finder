@@ -1,7 +1,6 @@
 import { 
   fetchMediaList, 
   fetchMediaSelection,
-  fetchKeywordAutocomplete, 
   fetchRandomKeyword
 } 
 from "./api.js";
@@ -39,7 +38,6 @@ function saveToStorage(type, storageKey) {
 
   const media = register[type];
   const keyword = register.keyword;
-  const currentMedia = media.selectedData;
 
   const store = JSON.parse(localStorage.getItem(storageKey) || "{}");
 
@@ -49,7 +47,9 @@ function saveToStorage(type, storageKey) {
 
   store[keyword].push({
     type: type,
-    data: currentMedia
+    title: media.selectedTitle,
+    link: media.externalLink,
+    overview: media.selectedOverview
   });
   localStorage.setItem(storageKey, JSON.stringify(store));
 }
@@ -230,7 +230,7 @@ export function renderMediaErrorState(type) {
   const existingError = document.querySelector(`#error-${type}`);
 
   if (mediaState.hasError === true) {
-    mediaCard.classList.add("hidden");
+    mediaCard.classList.add("is-hidden");
 
     if (!existingError) {
       const errorCard = buildElement({
@@ -265,7 +265,7 @@ export function renderMediaErrorState(type) {
     if (errorCard) {
       errorCard.remove();
     }
-    mediaCard.classList.remove("hidden");
+    mediaCard.classList.remove("is-hidden");
   }
 }
 

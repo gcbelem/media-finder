@@ -1,0 +1,48 @@
+name: Build and Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+pages:
+  build:
+    directory: .
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      TMDB_KEY: ${{ secrets.TMDB_KEY }}
+      GOOGLE_BOOKS_KEY: ${{ secrets.GOOGLE_BOOKS_KEY }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create keys.js file
+        run: |
+          echo "export const tmdbKey = '${TMDB_KEY}';" > ./keys.js
+          echo "export const googleBooksKey = '${GOOGLE_BOOKS_KEY}';" >> ./keys.js
+
+      - name: Upload site for deployment
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

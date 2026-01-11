@@ -10,7 +10,7 @@ from "./utilities.js"
 
 function createBookmarkSection (keyword) {
 // creates a boomark collection section.
-    const collectionScreen = document.querySelector("#collection-screen");
+    const collectionScreen = document.querySelector("#collection");
     
     if (!document.querySelector(`#collection-${keyword}`)) {
         const newBookmarkCollection = buildElement({
@@ -26,12 +26,32 @@ function createBookmarkSection (keyword) {
             parent: newBookmarkCollection
         });
     
+        const bookmarkHeader = buildElement({
+            type: "div",
+            className: "bookmark-header",
+            parent: overview
+        })
+        
         buildElement({
             type: "h3",
             text: keyword,
             className: "bookmark-title",
-            parent: overview
+            parent: bookmarkHeader
         });
+
+        const bookmarkList = getBookmarks();
+        const entryListLength = bookmarkList[keyword].length;
+        let entryCountText = null;
+
+        (entryListLength > 1)
+            ? entryCountText = "saved items"
+            : entryCountText = "saved item"
+
+        buildElement({
+            type: "span",
+            text: `${entryListLength} ${entryCountText}`,
+            parent: bookmarkHeader
+        })
     
         const expandButton = buildElement({
             type: "button",
@@ -55,23 +75,23 @@ function createBookmarkSection (keyword) {
         });
 
         showEntriesButton.addEventListener("click",() => {
-            entryInfo.classList.toggle("hidden");
+            entryInfo.classList.toggle("is-hidden");
         });
     };
 }
 
+window.createBookmarkSection = createBookmarkSection
+
 function toggleEmptyCollectionsMessage() {
 // hides or displays an empty collection message.
     const collectionList = document.querySelectorAll(".collection-container");
-    const displayEmptyCollection = document.querySelector("#empty-collection");
-    if (collectionList.length === 1) {
-        displayEmptyCollection.classList.remove("hidden");
+    const displayEmptyCollection = document.querySelector("#collection-empty-state");
+    if (collectionList.length === 0) {
+        displayEmptyCollection.classList.remove("is-hidden");
     } else {
-        displayEmptyCollection.classList.add("hidden");
+        displayEmptyCollection.classList.add("is-hidden");
     };
 }
-
-toggleEmptyCollectionsMessage();
 
 function getBookmarks() {
 // retrieves the bookmark object from localStorage or returns an empty object.
@@ -110,16 +130,22 @@ function populateBookmarkEntries (keyword) {
         if (!document.querySelector(`#bookmark-${keyword}-${index}`)) {
                         
             const bookmarkEntryContainer = buildElement({
+                type: "div",
+                className: "bookmark-entry",
+                id: `bookmark-${keyword}-${index}`,
+                parent: assignedCollection
+            });
+
+            const bookmarkEntryTop = buildElement({
             type: "div",
-            className: "bookmark-entry",
-            id: `bookmark-${keyword}-${index}`,
-            parent: assignedCollection
+            className: "bookmark-top",
+            parent: bookmarkEntryContainer
             });
 
             const typeIcon = buildElement({
                 type: "span",
                 className: "material-symbols-outlined",
-                parent: bookmarkEntryContainer
+                parent: bookmarkEntryTop
             });
 
             switch (item.type) {
@@ -134,22 +160,30 @@ function populateBookmarkEntries (keyword) {
                     break
             };
 
-            const media = register[item.type]?.selectedPath;
-
+            const bookmarkEntryHeader = buildElement({
+                type: "div",
+                className: "bookmark-entry-header",
+                parent: bookmarkEntryTop
+            })
+            
             buildElement({
                 type: "h4",
                 className: "bookmark-entry-title",
-                text: media.title,
-                parent: bookmarkEntryContainer
+                text: item.title,
+                parent: bookmarkEntryHeader
             });
+            
+            createEntryOverview(bookmarkEntryContainer,item);  
 
-            const buttonIconList = ["delete","open_in_new"]
             const buttonContainer = buildElement({
                 type: "div",
                 className: "entry-button",
                 parent: bookmarkEntryContainer
             })
 
+
+            const buttonIconList = ["open_in_new", "delete"];
+    
             buttonIconList.forEach (action => {
                 const button = buildElement({
                     type: "button",
@@ -157,13 +191,13 @@ function populateBookmarkEntries (keyword) {
                     text: action,
                     parent: buttonContainer
                 });
-
+    
                 button.addEventListener("click", () => {
                     if (action === "delete") {
-                        deleteBookmarkItem(keyword,index);
+                        deleteBookmarkItem(keyword, index);
                         bookmarkEntryContainer.remove();
                     } else if (action === "open_in_new") {
-                        const link = media.link;
+                        const link = item.link;
                         window.open(link, "_blank");
                     }
                 });
@@ -172,8 +206,49 @@ function populateBookmarkEntries (keyword) {
     });
 };
 
+function createEntryOverview (parent,entry) {
+// builds an overview paragraph with expand/collapse behavior.
+
+    const wrapper = buildElement({
+        type: "span",
+        className: "bookmark-entry-overview",
+        parent
+    });
+
+    const entryText = document.createElement("span");
+    wrapper.appendChild(entryText);
+
+    const fullOverview = entry.overview;
+    const words = fullOverview.trim().split(/\s+/);
+    const maxOverviewLength = 30;
+
+    if (words.length <= maxOverviewLength) {
+        entryText.textContent = fullOverview;
+        return;
+    }
+
+    const truncatedOverview = words.slice(0, maxOverviewLength).join(" ") + "...";
+    entryText.textContent = truncatedOverview;
+
+    const expandButton = buildElement({
+        type: "button",
+        className: "expand-entry-overview",
+        text: "Show More",
+        parent: wrapper
+    });
+
+    let isExpanded = false;
+
+    expandButton.addEventListener("click", () => {
+        isExpanded = !isExpanded;
+        entryText.textContent = isExpanded ? fullOverview : truncatedOverview;
+        expandButton.textContent = isExpanded ? "Show Less" : "Show More";
+    });
+}
+
 export function renderBookmarkCollection (keyword) {
 // ensures a bookmarked keyword and entries are rendered after user input.
+
     createBookmarkSection(keyword);
     populateBookmarkEntries(keyword);
     toggleEmptyCollectionsMessage();

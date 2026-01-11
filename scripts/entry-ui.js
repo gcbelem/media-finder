@@ -27,7 +27,7 @@ export let pageScreens = {};
 
 function registerPageScreens() {
   pageList.forEach(page => {
-    pageScreens[page] = document.querySelector(`#${page}-screen`);
+    pageScreens[page] = document.querySelector(`#${page}`);
   });
   showPage("home");
 }
@@ -36,16 +36,16 @@ function showPage(pageName) {
   pageList.forEach(page => {
     const accessControl = pageScreens[page];
     if (page === pageName) {
-      accessControl.classList.remove("hidden");
+      accessControl.classList.remove("is-hidden");
     } else {
-      accessControl.classList.add("hidden");
+      accessControl.classList.add("is-hidden");
     };
   });
 }
 
 function initializeNavigation() {
   pageList.forEach(page => {
-    const link = document.querySelectorAll(`.go-${page}`);
+    const link = document.querySelectorAll(`.js-go-${page}`);
 
     link.forEach(element => {
       element.addEventListener("click", () => {
@@ -57,16 +57,16 @@ function initializeNavigation() {
 
 /*
 
-DROPDOWN MENU
+HAMBURGUER MENU
 
 */
 
-function setupDropdownMenu() {
-  const dropdownIcon = document.querySelector("#dropdown-menu");
-  const navigationMenu = document.querySelector("#navlinks");
+function setupHamburguerMenu() {
+  const hamburguerIcon = document.querySelector("#menu-toggle");
+  const navigationMenu = document.querySelector("nav");
 
-  dropdownIcon.addEventListener("click", () => {
-    navigationMenu.classList.toggle("hidden");
+  hamburguerIcon.addEventListener("click", () => {
+    navigationMenu.classList.toggle("is-hidden");
   });
 }
 
@@ -80,7 +80,7 @@ function bootstrapUI() {
   setMedia();
   registerPageScreens();
   initializeNavigation();
-  setupDropdownMenu();
+  setupHamburguerMenu();
   buildExploreUI();
   initializeSearch();
   initializeRandomKeyword();

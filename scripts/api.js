@@ -41,7 +41,7 @@ AUTOCOMPLETE
 
 */
 
-export async function fetchKeywordAutocomplete() {
+export async function fetchAutocompleteSuggestions() {
 // fetches and displays autocomplete suggestions based on user input.
   
 try {
@@ -58,38 +58,13 @@ try {
     return
   }
 
-  const autocompleteList = await response.json();   
-
-  const existingBox = document.querySelector("#autocomplete-box");
-  if (existingBox) {
-    existingBox.remove();
-  }
-  
-  const autocompleteContainer = buildElement({
-    type: "div",
-    id: "autocomplete-box",
-    parent: document.querySelector("#search-bar")
-    })      
-
+  const autocompleteList = await response.json(); 
   const maxSuggestions = 4;
+  const slicedAutocompleteList = autocompleteList.slice(0,maxSuggestions);
 
-  for (let i = 0; i < maxSuggestions && i < autocompleteList.length; i++) {
-    const addRecommendation = buildElement({
-      type: "span",
-      className: "autocomplete-text",
-      parent: autocompleteContainer
-    })
-    const word = autocompleteList[i].word
-    addRecommendation.textContent = word;
+  return slicedAutocompleteList;
 
-    addRecommendation.addEventListener("click", () => {
-      searchText.value = word;
-      const autocompleteContainer = document.querySelector("#autocomplete-box");
-      autocompleteContainer.remove();
-    });
-  };
-}
-  
+  }
   catch (error) {
     console.error('Error fetching data:', error);
   };

@@ -25,7 +25,7 @@
         <li><strong>media-controller.js</strong> — manages media flow, navigation, and user actions.</li>
         <li><strong>utilities.js</strong> — shared helper and utility functions.</li>
         <li><strong>directory.js</strong> — centralized application state and configuration.</li>
-        <li><strong>entry.js</strong> — application entry point; initializes pages and bootstraps the UI.</li>
+        <li><strong>entry.js</strong> — application entry point => initializes pages and bootstraps the UI.</li>
         <li><strong>explore-ui.js</strong> — builds and updates the media exploration interface.</li>
         <li><strong>collection-ui.js</strong> — creates and manages the bookmarked media collection UI.</li>
     </ul>

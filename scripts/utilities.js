@@ -8,12 +8,14 @@ export function buildElement({
   type = "div",	
   className = "",	
   id = "",	
-  text = "",	
+  text = "",
+  image = "",	
   parent = ""})
   {
     const element = document.createElement(type);
     if (className) element.className = className;
     if (id) element.id = id;
+    if (image && type === "img") element.src = image;
     if (text) element.textContent = text;
     if (parent) parent.appendChild(element);
 

@@ -33,7 +33,7 @@ from "./media-controller.js";
 
 import {
   fetchMediaList,
-  fetchKeywordAutocomplete
+  fetchAutocompleteSuggestions
 }
 from "./api.js";
 
@@ -51,7 +51,7 @@ export function buildExploreUI() {
     
     const mediaContainer = buildElement({
       type: "div", 
-      className: "media-container hidden",
+      className: "media-container is-hidden",
       id: `${mediaType}-container`,
       parent: mediaArea}
     );
@@ -61,6 +61,20 @@ export function buildExploreUI() {
       id: `${mediaType}-card`, 
       parent: mediaContainer}
     );
+
+    const apiSourceImage = {
+      movie: "images/tmdb-logo.png",
+      podcast: "images/spotify-logo.png",
+      book: "images/google-books-logo.png"
+    }
+
+    buildElement({
+      type: "img",
+      className: "api-source-logo",
+      id: `${mediaType}-source-logo`,
+      image: apiSourceImage[mediaType],
+      parent: mediaCard
+    })
 
     buildElement({
       type: "h3", 
@@ -144,7 +158,7 @@ export function buildExploreUI() {
 
     buildElement({
       type: "summary", 
-      text: "summary", 
+      text: "expand", 
       parent: mediaOverview
     });
 
@@ -219,13 +233,13 @@ SEARCH BAR
 */
 
 export function initializeSearch() {
-  const findButton = document.querySelector("#find-button");
+  const findButton = document.querySelector("#search-submit");
   
   findButton.addEventListener("click", () => {
     const userInput = document.querySelector("input").value;
 
     if (!userInput) {
-      return window.alert ("No keyword!")
+      return
     };
 
     const currentInput = register.keyword;
@@ -242,14 +256,14 @@ export function initializeSearch() {
 export async function startMediaExplorer () {
   for (const type of mediaType) {
     const container = document.querySelector(`#${type}-container`);
-    container.classList.remove("hidden");
+    container.classList.remove("is-hidden");
     await fetchMediaList(type);
     advanceMedia(type);
   };
 }
 
 export function initializeRandomKeyword() {
-  const randomSearchButton = document.querySelector("#random-input");
+  const randomSearchButton = document.querySelector("#search-random");
 
   randomSearchButton.addEventListener("click",() => {
     handleRandomKeyword();
@@ -264,7 +278,7 @@ AUTOCOMPLETE
 
 export async function initializeAutocomplete() {
   const searchInput = document.querySelector("#search-input");
-  const debounceAutocomplete = debounceAction(fetchKeywordAutocomplete);
+  const debounceAutocomplete = debounceAction(runAutocomplete);
   
   searchInput.addEventListener("input", () => {
     const autocompleteContainer = document.querySelector("#autocomplete-box");
@@ -276,6 +290,65 @@ export async function initializeAutocomplete() {
   });
 }
 
+function handleAutocompleteOutsideClick(event, container, outsideClickListener) {
+  if (!container.contains(event.target)) {
+    container.remove();
+    document.removeEventListener("mousedown", outsideClickListener);
+  }
+}
+
+async function runAutocomplete() {
+  const searchText = document.querySelector("#search-input");
+  if (!searchText) {
+    return;
+  }
+
+  const autocompleteList = await fetchAutocompleteSuggestions();
+  if (!autocompleteList.length) {
+    return;
+  }
+
+  const existingBox = document.querySelector("#autocomplete-box");
+  if (existingBox) {
+    existingBox.remove();
+  }
+
+  const autocompleteContainer = buildElement({
+    type: "div",
+    id: "autocomplete-box",
+    parent: document.querySelector("#search-bar")
+  });
+
+  const autocompleteOutsideClickListener = (event) =>
+    handleAutocompleteOutsideClick(
+      event,
+      autocompleteContainer,
+      autocompleteOutsideClickListener
+    );
+
+  document.addEventListener("mousedown", autocompleteOutsideClickListener);
+
+  for (let i = 0; i < autocompleteList.length; i++) {
+    const addRecommendation = buildElement({
+      type: "span",
+      className: "autocomplete-text",
+      parent: autocompleteContainer
+    });
+
+    const word = autocompleteList[i].word;
+    addRecommendation.textContent = word;
+
+    addRecommendation.addEventListener("click", (event) => {
+      event.stopPropagation();
+      searchText.value = word;
+      autocompleteContainer.remove();
+      document.removeEventListener(
+        "mousedown",
+        autocompleteOutsideClickListener
+      );
+    });
+  };
+}
 
 /*
 
